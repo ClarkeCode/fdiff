@@ -12,6 +12,14 @@ struct ExeFlags {
 	bool searchDeep;
 };
 
+struct FileRep {
+	path filepath;
+	std::string name, extension, fullname;
+	uintmax_t filesize;
+	FileRep(recursive_directory_iterator it) : filepath(it->path()), name(it->path().stem().string()), extension(it->path().extension().string()),
+		fullname(it->path().filename().string()), filesize(it->file_size()) {};
+};
+
 int main(int argc, char* argv[]) {
 	if (argc == 1) show_usage();
 	std::list<std::string> cmd_args;
@@ -26,13 +34,13 @@ int main(int argc, char* argv[]) {
 	recursive_directory_iterator masterDir(masterDirPath);
 	recursive_directory_iterator targetDir(targetDirPath);
 	ExeFlags a{ 0 };
-	
+
 	while (masterDir != recursive_directory_iterator()) {
-		std::cout << masterDir->path() << " - " << masterDir->file_size() << std::endl;
+		std::cout << masterDir->path().string() << " - " << masterDir->file_size() << std::endl;
 		masterDir++;
 	}
 	while (targetDir != recursive_directory_iterator()) {
-		std::cout << targetDir->path() << " - " << targetDir->file_size() << std::endl;
+		std::cout << targetDir->path().string() << " - " << targetDir->file_size() << std::endl;
 		targetDir++;
 	}
 }
