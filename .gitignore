@@ -34,3 +34,5 @@
 
 #Custom excludes
 .vs/
+*.sln
+fdiff/
