@@ -16,13 +16,24 @@ struct ExeFlags {
 	bool searchDeep;
 };
 
+enum FileComparativeLocation { InMaster, InBoth, InTarget};
+
 struct FileRep {
-	path filepath;
-	std::string name, extension, fullname;
-	uintmax_t filesize;
-	bool inmaster, intarget;
-	FileRep(recursive_directory_iterator it) : filepath(it->path()), name(it->path().stem().string()), extension(it->path().extension().string()),
-		fullname(it->path().filename().string()), filesize(it->file_size()) {};
+	using rdi = recursive_directory_iterator;
+	using file_size_diff_t = long long;
+
+	std::string fileName, fileExtension, fullFileName;
+	uintmax_t fileSize;
+	file_size_diff_t fileSizeDifference;
+	bool isDirectory;
+	FileComparativeLocation fileLocation;
+
+	FileRep(rdi it, std::string shortFilePath, FileComparativeLocation fileLocation, file_size_diff_t sizeDifference = 0) : fullFileName(shortFilePath),
+		fileName(it->path().stem().string()), fileExtension(it->path().extension().string()), isDirectory(it->is_directory()),
+		fileSize(it->file_size()), fileLocation(fileLocation), fileSizeDifference(sizeDifference) {};
+
+	FileRep(rdi masterIt, rdi targetIt, std::string shortFilePath, FileComparativeLocation fileLocation) : 
+		FileRep(masterIt, shortFilePath, fileLocation, (targetIt->file_size() - masterIt->file_size())) {}
 };
 
 std::string stripLeadingSubstringFromPath(recursive_directory_iterator rdi, std::string const& leadingSubstring) {
