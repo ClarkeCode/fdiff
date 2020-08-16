@@ -2,6 +2,7 @@
 #include <iostream>
 #include <list>
 #include <filesystem>
+#include <vector>
 
 #include <algorithm> //mismatch
 #include <utility> //pair
@@ -20,10 +21,11 @@ enum FileComparativeLocation { InMaster, InBoth, InTarget};
 
 struct FileRep {
 	using rdi = recursive_directory_iterator;
+	using file_size_t = uintmax_t;
 	using file_size_diff_t = long long;
 
 	std::string fileName, fileExtension, fullFileName;
-	uintmax_t fileSize;
+	file_size_t fileSize;
 	file_size_diff_t fileSizeDifference;
 	bool isDirectory;
 	FileComparativeLocation fileLocation;
@@ -37,6 +39,7 @@ struct FileRep {
 };
 
 std::string stripLeadingSubstringFromPath(recursive_directory_iterator rdi, std::string const& leadingSubstring) {
+	if (rdi == recursive_directory_iterator()) return "";
 	std::string pathStr(rdi->path().string());
 	std::pair<std::string::const_iterator, std::string::const_iterator> ptrs = std::mismatch(pathStr.cbegin(), pathStr.cend(), leadingSubstring.begin(), leadingSubstring.end());
 	return std::string(ptrs.first, pathStr.cend());
@@ -65,21 +68,38 @@ int main(int argc, char* argv[]) {
 
 #define printout(item) std::cout << item << std::endl
 
-	while (masterDir != recursive_directory_iterator()) {
-		printout(masterDir->path().string() << " - " << masterDir->file_size());
+	std::vector<FileRep> scanResults;
 
-		printout((masterDir->is_directory() ? "directory" : "file"));
-		printout(stripLeadingSubstringFromPath(masterDir, masterDirString));
-		printout("");
-		masterDir++;
-	}
-	printout("");
-	while (targetDir != recursive_directory_iterator()) {
-		printout(targetDir->path().string() << " - " << targetDir->file_size());
+	std::string masterFileShortName = stripLeadingSubstringFromPath(masterDir, masterDirString);
+	std::string targetFileShortName = stripLeadingSubstringFromPath(targetDir, targetDirString);
 
-		printout((targetDir->is_directory() ? "directory" : "file"));
-		printout(stripLeadingSubstringFromPath(targetDir, targetDirString));
-		printout("");
-		targetDir++;
-	}
+	do {
+		//Condition: file in master is not found in targets
+		if (targetDir == recursive_directory_iterator() || masterFileShortName < targetFileShortName) {
+			scanResults.push_back(FileRep(masterDir, masterFileShortName, FileComparativeLocation::InMaster));
+			++masterDir;
+			masterFileShortName = stripLeadingSubstringFromPath(masterDir, masterDirString);
+		}
+
+		//Condition: file in target did not exist in master
+		else if (masterDir == recursive_directory_iterator() || targetFileShortName < masterFileShortName) {
+			scanResults.push_back(FileRep(targetDir, targetFileShortName, FileComparativeLocation::InTarget));
+			++targetDir;
+			targetFileShortName = stripLeadingSubstringFromPath(targetDir, targetDirString);
+		}
+
+		//Condition: file is in both master and target
+		else if (masterFileShortName == targetFileShortName) {
+			//Check for size difference
+			FileRep foundFile(masterDir, targetDir, masterFileShortName, FileComparativeLocation::InBoth);
+			++masterDir;
+			++targetDir;
+			masterFileShortName = stripLeadingSubstringFromPath(masterDir, masterDirString);
+			targetFileShortName = stripLeadingSubstringFromPath(targetDir, targetDirString);
+
+			if (foundFile.fileSizeDifference != 0)
+				scanResults.push_back(foundFile);
+		}
+	} while (masterDir != recursive_directory_iterator() && targetDir != recursive_directory_iterator());
+	printout("Done");
 }
