@@ -4,6 +4,10 @@
 #include <filesystem>
 #include <vector>
 
+#include <string>
+#include <sstream>
+#include <iomanip>
+
 #include <algorithm> //mismatch
 #include <utility> //pair
 
@@ -36,7 +40,17 @@ struct FileRep {
 		fileSize(it->file_size()), fileLocation(fileLocation), fileSizeDifference(sizeDifference) {};
 
 	FileRep(rdi masterIt, rdi targetIt, std::string shortFilePath, FileComparativeLocation fileLocation) : 
-		FileRep(masterIt, shortFilePath, fileLocation, (targetIt->file_size() - masterIt->file_size())) {}
+		FileRep(targetIt, shortFilePath, fileLocation, (targetIt->file_size() - masterIt->file_size())) {}
+
+	//TODO: replace this with a format string or move funtionality to dedicated formatting class
+	std::string yieldReportString() const {
+		std::stringstream ss;
+		ss << (fileLocation == InTarget ? '+' : (fileLocation == InMaster ? '-' : '~'));
+		ss << " " << std::left << std::setw(10) << fullFileName;
+		ss << std::right << std::setw(10) << fileSize;
+		ss << std::right << std::setw(10);  if (fileLocation == InBoth) ss << fileSizeDifference; else ss << '-';
+		return ss.str();
+	}
 };
 
 std::string stripLeadingSubstringFromPath(recursive_directory_iterator rdi, std::string const& leadingSubstring) {
@@ -66,8 +80,6 @@ int main(int argc, char* argv[]) {
 	recursive_directory_iterator masterDir(masterDirPath);
 	recursive_directory_iterator targetDir(targetDirPath);
 	ExeFlags exf{ 0 };
-
-#define printout(item) std::cout << item << std::endl
 
 	FileRep::FRepCollection scanResults;
 
@@ -102,5 +114,10 @@ int main(int argc, char* argv[]) {
 				scanResults.push_back(foundFile);
 		}
 	} while (masterDir != recursive_directory_iterator() && targetDir != recursive_directory_iterator());
-	printout("Done");
+	
+
+#define printout(item) std::cout << item << std::endl
+	for (FileRep const& frep : scanResults) {
+		printout(frep.yieldReportString());
+	}
 }
