@@ -20,6 +20,7 @@ struct ExeFlags {
 enum FileComparativeLocation { InMaster, InBoth, InTarget};
 
 struct FileRep {
+	using FRepCollection = std::vector<FileRep>;
 	using rdi = recursive_directory_iterator;
 	using file_size_t = uintmax_t;
 	using file_size_diff_t = long long;
@@ -68,7 +69,7 @@ int main(int argc, char* argv[]) {
 
 #define printout(item) std::cout << item << std::endl
 
-	std::vector<FileRep> scanResults;
+	FileRep::FRepCollection scanResults;
 
 	std::string masterFileShortName = stripLeadingSubstringFromPath(masterDir, masterDirString);
 	std::string targetFileShortName = stripLeadingSubstringFromPath(targetDir, targetDirString);
