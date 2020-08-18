@@ -53,6 +53,7 @@ struct FileRep {
 	}
 };
 
+//TODO: Delete
 std::string stripLeadingSubstringFromPath(recursive_directory_iterator rdi, std::string const& leadingSubstring) {
 	if (rdi == recursive_directory_iterator()) return "";
 	std::string pathStr(rdi->path().string());
@@ -62,14 +63,42 @@ std::string stripLeadingSubstringFromPath(recursive_directory_iterator rdi, std:
 
 class DirectoryHelper {
 	std::string basePathString;
-	path basePathString;
+	path basePath;
+	FileComparativeLocation directoryLocation;
+	using diterator_t = recursive_directory_iterator;
+	diterator_t fileIterator, endIterator;
+
+	std::string stripLeadingSubstringFromPath(diterator_t rdi, std::string const& leadingSubstring) const {
+		if (rdi == diterator_t()) return "";
+		std::string pathStr(rdi->path().string());
+		std::pair<std::string::const_iterator, std::string::const_iterator> ptrs = std::mismatch(pathStr.cbegin(), pathStr.cend(), leadingSubstring.begin(), leadingSubstring.end());
+		return std::string(ptrs.first, pathStr.cend());
+	}
+
 public:
-	DirectoryHelper(std::string const& input) {
+	DirectoryHelper(std::string const& input, FileComparativeLocation masterOrTarget) : directoryLocation(masterOrTarget) {
 		basePathString = input;
 		if (*basePathString.rbegin() != std::filesystem::path::preferred_separator)
 			basePathString += std::filesystem::path::preferred_separator;
 
-		std::filesystem::path::preferred_separator;
+		basePath = path(basePathString);
+		fileIterator = diterator_t(basePath);
+	}
+
+	std::string getFileShortName() const { return stripLeadingSubstringFromPath(fileIterator, basePathString); }
+	bool isAtDirectoryEnd() const { return fileIterator == endIterator; }
+
+	FileRep yieldCurrentFileReport() {
+		FileRep output(fileIterator, basePathString, directoryLocation);
+		++fileIterator;
+		return output;
+	}
+
+	FileRep yieldComparativeFileReport(DirectoryHelper& otherDirectoryHelper) {
+		FileRep output(fileIterator, otherDirectoryHelper.fileIterator, basePathString, FileComparativeLocation::InBoth);
+		++fileIterator;
+		++otherDirectoryHelper.fileIterator;
+		return output;
 	}
 };
 
