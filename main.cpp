@@ -60,6 +60,19 @@ std::string stripLeadingSubstringFromPath(recursive_directory_iterator rdi, std:
 	return std::string(ptrs.first, pathStr.cend());
 }
 
+class DirectoryHelper {
+	std::string basePathString;
+	path basePathString;
+public:
+	DirectoryHelper(std::string const& input) {
+		basePathString = input;
+		if (*basePathString.rbegin() != std::filesystem::path::preferred_separator)
+			basePathString += std::filesystem::path::preferred_separator;
+
+		std::filesystem::path::preferred_separator;
+	}
+};
+
 int main(int argc, char* argv[]) {
 	if (argc == 1) show_usage();
 	std::list<std::string> cmd_args;
