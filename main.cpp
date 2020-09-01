@@ -62,7 +62,7 @@ class FileRepFormatter {
 	static inline std::string colHeaderFS  = "File Size";
 	static inline std::string colHeaderFSD = "Difference";
 public:
-	static std::string yieldReportString(FileRep::FRepCollection const& collection, ExeFlags const& flags) {
+	static std::string yieldReportString(FileRep::FRepCollection const& collection, ExeFlags const& flags, std::string columnSeparator = " ") {
 		FileRep::file_size_t colWidthFFN = colHeaderFFN.size(), colWidthFS = colHeaderFS.size(), colWidthFSD = colHeaderFSD.size();
 
 		for (FileRep const& fr : collection) {
@@ -152,12 +152,12 @@ int main(int argc, char* argv[]) {
 
 	do {
 		//Condition: file in master is not found in targets
-		if (targetDir.isAtDirectoryEnd() || masterDir.getFileShortName() < targetDir.getFileShortName()) {
+		if (!masterDir.isAtDirectoryEnd() && (targetDir.isAtDirectoryEnd() || masterDir.getFileShortName() < targetDir.getFileShortName())) {
 			scanResults.push_back(masterDir.yieldCurrentFileReport());
 		}
 
 		//Condition: file in target did not exist in master
-		else if (masterDir.isAtDirectoryEnd() || targetDir.getFileShortName() < masterDir.getFileShortName()) {
+		else if (!targetDir.isAtDirectoryEnd() && (masterDir.isAtDirectoryEnd() || targetDir.getFileShortName() < masterDir.getFileShortName())) {
 			scanResults.push_back(targetDir.yieldCurrentFileReport());
 		}
 
