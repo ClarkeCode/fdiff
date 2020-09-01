@@ -16,9 +16,11 @@ using namespace std::filesystem;
 static void show_usage() {
 	std::cerr << "Usage: fdiff <options> ORIGINAL TARGET" << std::endl;
 }
-
+//TODO: Implement option flags
 struct ExeFlags {
-	bool searchDeep;
+	bool showFileNames;
+	bool showFileSize;
+	bool showFileSizeDifference;
 };
 
 enum FileComparativeLocation { InMaster, InBoth, InTarget};
@@ -52,6 +54,43 @@ struct FileRep {
 		return ss.str();
 	}
 };
+
+class FileRepFormatter {
+	static std::stringstream ss;
+	//static std::stringstream numeric;
+	static inline std::string colHeaderFFN = "File Name";
+	static inline std::string colHeaderFS  = "File Size";
+	static inline std::string colHeaderFSD = "Difference";
+public:
+	static std::string yieldReportString(FileRep::FRepCollection const& collection, ExeFlags const& flags) {
+		FileRep::file_size_t colWidthFFN = colHeaderFFN.size(), colWidthFS = colHeaderFS.size(), colWidthFSD = colHeaderFSD.size();
+
+		for (FileRep const& fr : collection) {
+			size_t width = 0;
+			if (flags.showFileNames) {
+				ss << fr.fullFileName;
+				width = ss.str().size();
+				if (width > colWidthFFN) colWidthFFN = width;
+				{ width = 0; ss.str(""); }
+			}
+			if (flags.showFileSize) {
+				ss << fr.fileSize;
+				width = ss.str().size();
+				if (width > colWidthFS) colWidthFS = width;
+				{ width = 0; ss.str(""); }
+			}
+			if (flags.showFileNames) {
+				ss << fr.fileSizeDifference;
+				width = ss.str().size();
+				if (width > colWidthFSD) colWidthFSD = width;
+				{ width = 0; ss.str(""); }
+			}
+		}
+
+		return ss.str();
+	}
+};
+std::stringstream FileRepFormatter::ss = std::stringstream();
 
 class DirectoryHelper {
 	std::string basePathString;
@@ -107,7 +146,7 @@ int main(int argc, char* argv[]) {
 	DirectoryHelper targetDir(cmd_args.front(), FileComparativeLocation::InTarget);
 	cmd_args.pop_front();
 	
-	ExeFlags exf{ 0 };
+	ExeFlags exf{ 1, 1, 1 };
 
 	FileRep::FRepCollection scanResults;
 
@@ -137,4 +176,5 @@ int main(int argc, char* argv[]) {
 	for (FileRep const& frep : scanResults) {
 		printout(frep.yieldReportString());
 	}
+	FileRepFormatter::yieldReportString(scanResults, exf);
 }
