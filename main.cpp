@@ -66,7 +66,10 @@ class FileRepFormatter {
 public:
 	static std::string yieldReportString(FileRep::FRepCollection const& collection, ExeFlags const& flags, std::string columnSeparator = " ", char horizontalRuleChar = '-') {
 		FileRep::file_size_t colWidthFFN = colHeaderFFN.size(), colWidthFS = colHeaderFS.size(), colWidthFSD = colHeaderFSD.size();
-
+		
+		//Ensure fresh stringstream
+		ss.str("");
+		
 		//Find maximum column width
 		for (FileRep const& fr : collection) {
 			size_t width = 0;
@@ -105,7 +108,7 @@ public:
 		//HR
 		if (flags.includeHeaderHorizontalRule) {
 			size_t whiteSpaceCorrectionAmount = columnSeparator.size() - columnSeparator.find_last_not_of(' ') - 1;
-			ss << std::string(ssHeaderLength.str().size() - (whiteSpaceCorrectionAmount), horizontalRuleChar);
+			ss << std::string(ssHeaderLength.str().size() - (flags.includeColumnSeparatorsOnEdges ? whiteSpaceCorrectionAmount : 0), horizontalRuleChar);
 			ss << std::endl;
 		}
 
