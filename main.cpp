@@ -45,16 +45,6 @@ struct FileRep {
 
 	FileRep(rdi masterIt, rdi targetIt, std::string shortFilePath, FileComparativeLocation fileLocation) : 
 		FileRep(targetIt, shortFilePath, fileLocation, (targetIt->file_size() - masterIt->file_size())) {}
-
-	//TODO: replace this with a format string or move funtionality to dedicated formatting class
-	std::string yieldReportString() const {
-		std::stringstream ss;
-		ss << (fileLocation == InTarget ? '+' : (fileLocation == InMaster ? '-' : '~'));
-		ss << " " << std::left << std::setw(10) << fullFileName;
-		ss << std::right << std::setw(10) << fileSize;
-		ss << std::right << std::setw(10);  if (fileLocation == InBoth) ss << fileSizeDifference; else ss << '-';
-		return ss.str();
-	}
 };
 
 class FileRepFormatter {
@@ -217,9 +207,5 @@ int main(int argc, char* argv[]) {
 	
 
 #define printout(item) std::cout << item << std::endl
-	for (FileRep const& frep : scanResults) {
-		printout(frep.yieldReportString());
-	}
-	printout("");
 	printout(FileRepFormatter::yieldReportString(scanResults, exf, " | "));
 }
