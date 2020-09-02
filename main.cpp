@@ -21,6 +21,8 @@ struct ExeFlags {
 	bool showFileNames;
 	bool showFileSize;
 	bool showFileSizeDifference;
+	bool includeColumnSeparatorsOnEdges;
+	bool includeHeaderHorizontalRule;
 };
 
 enum FileComparativeLocation { InMaster, InBoth, InTarget};
@@ -62,9 +64,10 @@ class FileRepFormatter {
 	static inline std::string colHeaderFS  = "File Size";
 	static inline std::string colHeaderFSD = "Difference";
 public:
-	static std::string yieldReportString(FileRep::FRepCollection const& collection, ExeFlags const& flags, std::string columnSeparator = " ") {
+	static std::string yieldReportString(FileRep::FRepCollection const& collection, ExeFlags const& flags, std::string columnSeparator = " ", char horizontalRuleChar = '-') {
 		FileRep::file_size_t colWidthFFN = colHeaderFFN.size(), colWidthFS = colHeaderFS.size(), colWidthFSD = colHeaderFSD.size();
 
+		//Find maximum column width
 		for (FileRep const& fr : collection) {
 			size_t width = 0;
 			if (flags.showFileNames) {
@@ -85,6 +88,44 @@ public:
 				if (width > colWidthFSD) colWidthFSD = width;
 				{ width = 0; ss.str(""); }
 			}
+		}
+
+		//Compose the output
+
+		//Generate the Header
+#define newline(stream) stream << (flags.includeColumnSeparatorsOnEdges ? columnSeparator : "") << std::endl
+		ss << " " << columnSeparator << std::left << std::setw(colWidthFFN) << colHeaderFFN;
+		ss << columnSeparator << std::right << std::setw(colWidthFS) << colHeaderFS;
+		ss << columnSeparator << std::right << std::setw(colWidthFSD) << colHeaderFSD;
+
+		ss << (flags.includeColumnSeparatorsOnEdges ? columnSeparator : "");
+		std::stringstream ssHeaderLength;
+		ssHeaderLength << ss.rdbuf();
+		ss << std::endl;
+		//HR
+		if (flags.includeHeaderHorizontalRule) {
+			size_t whiteSpaceCorrectionAmount = columnSeparator.size() - columnSeparator.find_last_not_of(' ') - 1;
+			ss << std::string(ssHeaderLength.str().size() - (whiteSpaceCorrectionAmount), horizontalRuleChar);
+			ss << std::endl;
+		}
+
+
+
+		//Generate Lines
+		for (FileRep const& fr : collection) {
+			ss << (fr.fileLocation == InTarget ? '+' : (fr.fileLocation == InMaster ? '-' : '~'));
+			if (flags.showFileNames) {
+				ss << columnSeparator << std::left << std::setw(colWidthFFN) << fr.fullFileName;
+			}
+			if (flags.showFileSize) {
+				ss << columnSeparator << std::right << std::setw(colWidthFS) << fr.fileSize;
+			}
+			if (flags.showFileNames) {
+				ss << columnSeparator << std::right << std::setw(colWidthFSD);
+				if (fr.fileLocation == InBoth) ss << fr.fileSizeDifference; else ss << '-';
+			}
+
+			newline(ss);
 		}
 
 		return ss.str();
@@ -146,7 +187,7 @@ int main(int argc, char* argv[]) {
 	DirectoryHelper targetDir(cmd_args.front(), FileComparativeLocation::InTarget);
 	cmd_args.pop_front();
 	
-	ExeFlags exf{ 1, 1, 1 };
+	ExeFlags exf{ 1, 1, 1, 1, 1 };
 
 	FileRep::FRepCollection scanResults;
 
@@ -176,5 +217,6 @@ int main(int argc, char* argv[]) {
 	for (FileRep const& frep : scanResults) {
 		printout(frep.yieldReportString());
 	}
-	FileRepFormatter::yieldReportString(scanResults, exf);
+	printout("");
+	printout(FileRepFormatter::yieldReportString(scanResults, exf, " | "));
 }
