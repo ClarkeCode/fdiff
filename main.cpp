@@ -18,6 +18,7 @@ static void show_usage() {
 }
 //TODO: Implement option flags
 struct ExeFlags {
+	bool useColour;
 	bool showFileNames;
 	bool showFileSize;
 	bool showFileSizeDifference;
@@ -180,7 +181,7 @@ int main(int argc, char* argv[]) {
 	DirectoryHelper targetDir(cmd_args.front(), FileComparativeLocation::InTarget);
 	cmd_args.pop_front();
 	
-	ExeFlags exf{ 1, 1, 1, 1, 1 };
+	ExeFlags exf{ 1, 1, 1, 1, 1, 1 };
 
 	FileRep::FRepCollection scanResults;
 
