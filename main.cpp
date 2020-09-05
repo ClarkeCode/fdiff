@@ -11,20 +11,12 @@
 #include <algorithm> //mismatch
 #include <utility> //pair
 
+#include "source/headers/ExecutionFlags.hpp"
 using namespace std::filesystem;
 
 static void show_usage() {
 	std::cerr << "Usage: fdiff <options> ORIGINAL TARGET" << std::endl;
 }
-//TODO: Implement option flags
-struct ExecutionFlags {
-	bool useColour;
-	bool showFileNames;
-	bool showFileSize;
-	bool showFileSizeDifference;
-	bool includeColumnSeparatorsOnEdges;
-	bool includeHeaderHorizontalRule;
-};
 
 enum FileComparativeLocation { InMaster, InBoth, InTarget};
 
@@ -174,6 +166,7 @@ int main(int argc, char* argv[]) {
 		cmd_args.push_back(argv[x]);
 	}
 
+	//TODO: Implement processing of option flags
 	DirectoryHelper masterDir(cmd_args.front(), FileComparativeLocation::InMaster);
 	cmd_args.pop_front();
 
