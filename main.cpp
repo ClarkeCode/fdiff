@@ -17,7 +17,7 @@ static void show_usage() {
 	std::cerr << "Usage: fdiff <options> ORIGINAL TARGET" << std::endl;
 }
 //TODO: Implement option flags
-struct ExeFlags {
+struct ExecutionFlags {
 	bool useColour;
 	bool showFileNames;
 	bool showFileSize;
@@ -50,12 +50,11 @@ struct FileRep {
 
 class FileRepFormatter {
 	static std::stringstream ss;
-	//static std::stringstream numeric;
 	static inline std::string colHeaderFFN = "File Name";
 	static inline std::string colHeaderFS  = "File Size";
 	static inline std::string colHeaderFSD = "Difference";
 public:
-	static std::string yieldReportString(FileRep::FRepCollection const& collection, ExeFlags const& flags, std::string columnSeparator = " ", char horizontalRuleChar = '-') {
+	static std::string yieldReportString(FileRep::FRepCollection const& collection, ExecutionFlags const& flags, std::string columnSeparator = " ", char horizontalRuleChar = '-') {
 		FileRep::file_size_t colWidthFFN = colHeaderFFN.size(), colWidthFS = colHeaderFS.size(), colWidthFSD = colHeaderFSD.size();
 		
 		//Ensure fresh stringstream
@@ -181,7 +180,7 @@ int main(int argc, char* argv[]) {
 	DirectoryHelper targetDir(cmd_args.front(), FileComparativeLocation::InTarget);
 	cmd_args.pop_front();
 	
-	ExeFlags exf{ 1, 1, 1, 1, 1, 1 };
+	ExecutionFlags exf{ 1, 1, 1, 1, 1, 1 };
 
 	FileRep::FRepCollection scanResults;
 
